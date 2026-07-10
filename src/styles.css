@@ -114,3 +114,79 @@ nav svg, .journey-button svg { width:20px; height:20px }
   .workspace { height:auto; min-height:calc(100vh - 76px); grid-template-columns:1fr }.rail { display:flex; gap:5px; overflow:auto; border-right:0; border-bottom:1px solid var(--line); padding:10px }.rail>.eyebrow,.grammar-note { display:none }.rung { min-width:105px; margin:0 }.index-panel { min-height:540px; border-right:0 }.detail-panel { min-height:700px }.essence-extractor { grid-template-columns:1fr }.essence-row { grid-template-columns:1fr 1fr }.yield-ladder { grid-template-columns:1fr }.composer { grid-template-columns:1fr }.plus { text-align:center }.season-panel { grid-template-columns:1fr }.condition-grid { grid-template-columns:repeat(2,1fr) }.fizzle-strip { grid-template-columns:1fr 1fr }.ladder { grid-template-columns:1fr }.ladder-step>svg { display:none }.journey-modal { max-height:90vh; overflow:auto }
   .materials-page { padding:25px 14px 50px }.material-stats { width:100%; overflow:auto }.material-stats div { min-width:95px }.materials-head { display:none }.material-row { grid-template-columns:1fr auto; gap:12px }.material-origin,.material-uses { grid-column:1/-1 }.material-rung-badge { grid-column:2; grid-row:1 }
 }
+
+/* ============================================================
+   Phase 5 — All-pages polish: hover/press/focus motion and
+   entrance animations for the shell + Explorer + Garden +
+   Materials + Journey modal. Additive; scoped to existing
+   classes so page structure is untouched. Motion wrapped in
+   prefers-reduced-motion at the bottom. Existing @media
+   breakpoints and :focus-visible outline are preserved above.
+   ============================================================ */
+
+/* --- Top nav / brand / journey button --- */
+.brand { transition: transform .12s ease-out; }
+.brand:hover { transform: translateY(-1px); }
+.brand:active { transform: translateY(0); }
+nav button { transition: color .15s ease-out, border-color .15s ease-out, background-color .15s ease-out; }
+nav button:hover { color:#fff4cc; background:#ffffff08; }
+.journey-button { transition: background-color .15s ease-out, border-color .15s ease-out, transform .1s ease-out; }
+.journey-button:hover { background:#ffffff18; border-color:#a7b592; transform: translateY(-1px); }
+.journey-button:active { transform: translateY(0); }
+
+/* --- Left rail rungs --- */
+.rung { transition: background-color .12s ease-out, border-color .12s ease-out; }
+.rung:hover:not(.active) { background:#dcd2b0; border-left-color:#9aa17e; }
+
+/* --- Spellbook Explorer --- */
+.role-filters button { transition: background-color .12s ease-out, border-color .12s ease-out, color .12s ease-out; }
+.role-filters button:hover:not(.active) { border-color:#93a074; color:#3c5e3e; }
+.spell-row { transition: background-color .12s ease-out, box-shadow .12s ease-out; }
+.spell-row:active { background:#e0dcc2; }
+/* Detail panel fades/slides in when a new spell is selected. Keyed by React
+   remounting the panel content; harmless if it re-runs on re-render. */
+@keyframes detail-in { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+.detail-top { animation: detail-in .22s ease-out; }
+
+/* --- Recipe Garden --- */
+.essence-row button { transition: background-color .12s ease-out, border-color .12s ease-out, box-shadow .12s ease-out, transform .08s ease-out; }
+.essence-row button:hover:not(.active) { border-color:#8f9d6f; background:#f5eedb; }
+.essence-row button:active { transform: translateY(1px); }
+.season-buttons button, .condition, .stream-toggle { transition: background-color .12s ease-out, border-color .12s ease-out, box-shadow .12s ease-out; }
+.season-buttons button:hover:not(.active) { border-color:#8f9d6f; background:#f6eed6; }
+.picker select { transition: background-color .12s ease-out; cursor:pointer; }
+.picker select:hover { background:#ded4ba; }
+.plant-button { transition: transform .1s ease-out, box-shadow .1s ease-out, background-color .12s ease-out; }
+.plant-button:hover { background:#3d6b44; transform: translate(-1px,-1px); box-shadow:5px 5px 0 #9a8a61; }
+.plant-button:active { transform: translate(0,0); box-shadow:2px 2px 0 #9a8a61; }
+/* Result reveal — a satisfying entrance when a recipe resolves. */
+@keyframes result-reveal { from { opacity:0; transform: scale(.96); } to { opacity:1; transform: scale(1); } }
+.result.revealed { animation: result-reveal .28s cubic-bezier(.2,.8,.3,1); }
+
+/* --- Materials --- */
+.material-row { transition: background-color .12s ease-out; }
+.material-rungs button { transition: background-color .12s ease-out, border-color .12s ease-out, color .12s ease-out; }
+.material-rungs button:hover:not(.active) { border-color:#93a074; color:#3c5e3e; }
+.material-uses button { transition: color .12s ease-out, border-color .12s ease-out; }
+.material-uses button:hover { color:#243e27; border-bottom-color:#3c5e3e; }
+
+/* --- Journey modal --- */
+@keyframes modal-backdrop-in { from { opacity:0 } to { opacity:1 } }
+@keyframes modal-pop-in { from { opacity:0; transform: translateY(12px) scale(.96); } to { opacity:1; transform: translateY(0) scale(1); } }
+.modal-backdrop { animation: modal-backdrop-in .16s ease-out; }
+.journey-modal { animation: modal-pop-in .24s cubic-bezier(.2,.8,.3,1); }
+.close { transition: background-color .12s ease-out, border-color .12s ease-out; }
+.close:hover { background:#d3c6a4; border-color:#8a7d5c; }
+.primary { transition: transform .1s ease-out, box-shadow .1s ease-out, background-color .12s ease-out; }
+.primary:active { transform: translate(0,0); box-shadow:2px 2px 0 #c5b793; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand, nav button, .journey-button, .rung, .role-filters button, .spell-row,
+  .essence-row button, .season-buttons button, .condition, .stream-toggle,
+  .picker select, .plant-button, .material-row, .material-rungs button,
+  .material-uses button, .close, .primary { transition: none; }
+  .detail-top, .result.revealed, .modal-backdrop, .journey-modal { animation: none; }
+  .brand:hover, .journey-button:hover, .journey-button:active,
+  .essence-row button:active, .plant-button:hover, .plant-button:active,
+  .primary:active, .brand:active { transform: none; }
+}

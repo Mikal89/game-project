@@ -1,0 +1,490 @@
+.play-screen { min-height:calc(100vh - 76px); display:flex; align-items:flex-start; justify-content:center; padding:30px clamp(14px,4vw,50px) 50px; background:#eee5cd; position:relative; z-index:1 }
+.play-frame { position:relative; border:4px solid #9b834c; box-shadow:10px 10px 0 #cbbd97; background:#171310 }
+.play-canvas { display:block; width:min(80vw,900px); height:auto; image-rendering:pixelated; background:#171310 }
+
+.hud-top { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:14px; padding:8px 12px; background:#203b28e6; color:#f7efd8; font:600 12px "Pixelify Sans"; letter-spacing:.03em }
+.hud-zone { font-size:15px; margin-right:auto }
+.hud-day,.hud-gold { display:flex; align-items:center; gap:5px; color:#e9dfba }
+.hud-gold svg { color:#e9c14a }
+.hud-spells { color:#c9a5e8 }
+.hud-rep { color:#e9c14a }
+.hud-blight { color:#c48fd9; border:1px solid #5a2e6e; background:#2a1035; padding:3px 8px; font-size:11px }
+.hud-held-spell { padding:3px 8px; font-size:11px; border:1px solid #5a7a3a; background:#1c2e14; color:#bfe08a }
+.hud-held-spell.bloom { border-color:#a5567e; color:#e9a6cd }
+.hud-held-spell.root { border-color:#7a5a34; color:#d6b085 }
+.hud-held-spell.vine { border-color:#4f7a2e; color:#a6d68a }
+.hud-held-spell.fungus { border-color:#6a4a72; color:#c9a6d0 }
+.hud-held-spell.pod { border-color:#a56a34; color:#e0b585 }
+.hud-bin { color:#e0c07a; border:1px solid #6d5a34; background:#2a2114; padding:3px 8px; font-size:11px; white-space:pre-line }
+
+/* Pot combine panel */
+.pot-panel { max-width:560px }
+.pot-slots { display:flex; align-items:flex-start; gap:10px; margin:6px 0 12px }
+.pot-slot-group { flex:1 1 0; min-width:0 }
+.pot-plus { align-self:center; font-size:22px; color:#c9b98a; padding:0 2px }
+.pot-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px }
+.pot-chip { display:flex; align-items:center; gap:5px; padding:5px 8px; border:1px solid #6d5a34; background:#241d12; color:#e9dfba; font:600 11px "Pixelify Sans"; cursor:pointer }
+.pot-chip:hover { background:#2f2617 }
+.pot-chip.selected { border-color:#e9c14a; background:#3a2f16; box-shadow:0 0 0 1px #e9c14a inset }
+.pot-chip .material-icon { width:18px; height:18px }
+.pot-chip-name { white-space:nowrap }
+.pot-chip-count { color:#b7a878; font-size:10px }
+.pot-chip.extract { width:100% }
+.pot-brew-btn { width:100%; padding:10px; border:2px solid #7a6a3a; background:#3b5a2c; color:#f3ecd2; font:700 14px "Pixelify Sans"; cursor:pointer }
+.pot-brew-btn:hover:not(:disabled) { background:#47702f }
+.pot-brew-btn:disabled { opacity:.5; cursor:not-allowed }
+.hud-weather { display:flex; align-items:center; gap:4px; padding:3px 8px; font-size:11px; border:1px solid #6d5a34 }
+.hud-weather.drought { color:#f0c04a; background:#3a2c14; border-color:#c9902a }
+.hud-weather.rain { color:#9fc9e8; background:#1f3140; border-color:#4a86ad }
+.hud-stamina { display:flex; align-items:center; gap:6px; color:#e9dfba }
+.hud-stamina-bar { width:70px; height:9px; background:#241d15; border:1px solid #5c4d30; overflow:hidden }
+.hud-stamina-fill { display:block; height:100%; background:linear-gradient(90deg,#8a5937,#e0b356); transition:width .2s }
+.hud-stamina-num { font:600 11px "Pixelify Sans"; min-width:20px; text-align:right }
+.hud-advance { border:1px solid #f0d987; background:#3a5a3d; color:#fff4cc; padding:6px 10px; cursor:pointer; font:600 11px "Pixelify Sans" }
+.hud-advance:hover { background:#466f4a }
+.hud-icon-btn { border:1px solid #6d5a34; background:#241d15; color:#e9dfba; padding:6px 10px; cursor:pointer; font:600 11px "Pixelify Sans" }
+.hud-icon-btn:hover { border-color:#e9c14a; background:#33291a }
+
+.hud-label { display:block; text-transform:uppercase; letter-spacing:.1em; font-size:10px; color:#b3a578; margin-bottom:6px }
+.hud-inv-empty { font-size:11px; color:#8f8567; line-height:1.4 }
+
+.hud-log { position:absolute; top:44px; left:0; display:flex; flex-direction:column-reverse; gap:3px; padding:9px 11px; max-width:280px; max-height:96px; overflow:hidden; pointer-events:none }
+.hud-log-line { background:#1c1712b3; color:#e9dfba; font-size:11px; padding:4px 8px; border-left:2px solid #4a6b3f }
+
+/* Anchored to the top edge of the bottom dock (bottom:100%) so it hovers just
+   above the hotbar, over the lower portion of the canvas — the dock is now an
+   in-flow box directly under the canvas, so this keeps the prompt on the play
+   area instead of drifting down over the controls. */
+.hud-prompt { position:absolute; left:50%; bottom:100%; margin-bottom:8px; transform:translateX(-50%); background:#e9c14ae6; color:#241a0d; font:600 12px "Pixelify Sans"; padding:7px 14px; white-space:nowrap; z-index:5; pointer-events:none }
+
+/* Planting-ritual step guide — a persistent checklist on the right of the play
+   frame, below the minimap. Shows the full till → seed → essence → energy →
+   magic → harvest sequence with the current step highlighted, so casting is
+   always self-explanatory. Purely informational (pointer-events:none). */
+.ritual-guide { position:absolute; top:228px; right:8px; z-index:6; width:174px; background:#1c1712e6; border:1px solid #6d5a34; box-shadow:3px 3px 0 #0b130d80; padding:8px 9px; pointer-events:none; font-family:inherit }
+.ritual-guide-title { font:700 11px "Pixelify Sans"; color:#e9c14a; text-align:center; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px }
+.ritual-guide-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px }
+.ritual-step { display:flex; align-items:center; gap:7px; font:600 11px "Pixelify Sans"; color:#8f8567 }
+.ritual-step-mark { flex:none; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border:1px solid #4a3f2a; background:#241d15; color:#8f8567; font-size:10px }
+.ritual-step.done { color:#c9dfae }
+.ritual-step.done .ritual-step-mark { border-color:#4a6b3f; background:#2f4a2e; color:#bfe6a0 }
+.ritual-step.active { color:#f7efd8 }
+.ritual-step.active .ritual-step-mark { border-color:#e9c14a; background:#e9c14a; color:#241a0d }
+.ritual-guide-detail { margin-top:7px; padding:5px 7px; background:#e9c14ae6; color:#241a0d; font:600 10px "Pixelify Sans"; line-height:1.35 }
+
+/* Minecraft-style bottom dock: a slim horizontal materials bar stacked
+   directly above the spell hotbar, both always visible; the full grid
+   inventory (opened with I) is a separate overlay below. */
+/* Sits in normal flow directly below the canvas (it's the next flex sibling
+   after it inside .play-frame) rather than floating over the bottom of the
+   play area — otherwise the opaque materials bar + hotbar cover the lowest
+   rows of world tiles and the player when they walk near the bottom edge. */
+.hud-bottom-dock { position:relative; display:flex; flex-direction:column }
+.hud-satchel-charge { align-self:center; margin-bottom:4px; background:#3a5a3de6; color:#fff4cc; font:600 11px "Pixelify Sans"; padding:5px 12px }
+.hud-inv-bar { display:flex; gap:4px; padding:6px 8px; background:#241d15d9; border-top:1px solid #4a3f2a; overflow-x:auto }
+/* Material chips are real <button>s now — click to select a seed material
+   for plant()/P, same selection pattern as hotbar slots. */
+.hud-inv-chip { flex:0 0 auto; display:flex; align-items:center; gap:5px; background:#2b241a; color:#e9dfba; padding:4px 8px; font-size:11px; white-space:nowrap; border:1px solid transparent; cursor:pointer; font-family:inherit }
+.hud-inv-chip b { color:#e9c14a; font:600 11px "Pixelify Sans" }
+.hud-inv-chip.selected { border-color:#e9c14a; background:#33291a; box-shadow:0 0 0 1px #e9c14a inset }
+/* When a castable spell is equipped, its cast reagent chip is highlighted so
+   the player can see what the next F-cast will consume before pressing it. */
+.hud-inv-chip.reagent { border-color:#6c8fbf; box-shadow:0 0 0 1px #6c8fbf inset }
+.hud-inv-chip.reagent b { color:#a9c8ef }
+/* The on-screen item hotbar: a fixed row of icon-only material slots
+   (Minecraft-style). No text labels — hover shows the name via data-tooltip,
+   a small stack count sits in the corner. Empty slots are flat placeholders. */
+.hud-item-hotbar { display:flex; gap:5px; padding:7px 8px; background:#241d15d9; border-top:1px solid #4a3f2a }
+.hud-item-slot { position:relative; flex:0 0 auto; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:#2b241a; border:1px solid #5c4d30; cursor:pointer; padding:0; font-family:inherit }
+.hud-item-slot.empty { background:#20190f; border:1px dashed #4a3f2a80; cursor:default }
+.hud-item-slot .material-icon { width:28px; height:28px }
+.hud-item-slot.selected { border-color:#8fd06a; box-shadow:0 0 0 1px #8fd06a inset }
+.hud-item-slot.reagent { border-color:#6c8fbf; box-shadow:0 0 0 1px #6c8fbf inset }
+.hud-item-slot.depleted { opacity:0.45 }
+.hud-item-count { position:absolute; right:2px; bottom:0; font:600 11px "Pixelify Sans"; color:#e9c14a; text-shadow:1px 1px 0 #000 }
+
+/* Wand reveal — the temporary equipped-spell bar shown on Tab, floated above
+   the item hotbar rather than living in it permanently. */
+.hud-wand-reveal { background:#1c1712f2; border-top:1px solid #5a4a8a }
+.hud-wand-reveal-label { display:block; padding:4px 8px 0; font:600 10px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; color:#bca6ff }
+.hud-wand-reveal .hud-hotbar { background:transparent; padding:4px 8px 8px }
+
+/* The Wand item shown in the Inventory's Items tab — hover/focus reveals a
+   popover listing the currently-equipped spells. */
+.inv-wand-section { margin-top:10px }
+.inv-wand-item { position:relative; display:flex; align-items:center; gap:10px; background:#241b33; border:1px solid #5a4a8a; padding:8px 10px; cursor:pointer }
+.inv-wand-item:hover, .inv-wand-item:focus-visible { border-color:#bca6ff; outline:none }
+.wand-item-icon { font-size:22px; color:#d6c6ff; text-shadow:0 0 6px #8a6fff }
+.wand-item-label { display:flex; flex-direction:column; gap:2px }
+.wand-item-name { font:600 13px "Pixelify Sans"; color:#eadfff }
+.wand-item-count { font-size:11px; color:#a99bd0 }
+.wand-tooltip { display:none; position:absolute; left:0; bottom:calc(100% + 6px); z-index:5; min-width:180px; background:#191324f2; border:1px solid #6a58a0; padding:8px 10px; box-shadow:0 6px 18px #0009 }
+.inv-wand-item:hover .wand-tooltip, .inv-wand-item:focus-within .wand-tooltip { display:block }
+.wand-tooltip strong { display:block; font:600 10px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; color:#bca6ff; margin-bottom:5px }
+.wand-tooltip-row { display:flex; align-items:center; gap:6px; padding:2px 0 }
+.wand-tooltip-name { font-size:12px; color:#eadfff }
+.wand-tooltip-empty { font-size:11px; color:#a99bd0 }
+
+/* Wand spell GUI — a Minecraft-style item interface that opens over the bag
+   when the Aether Wand item is clicked (no dedicated inventory tab). Click the
+   backdrop to close, or to drop a grabbed equipped spell (unequip it). */
+.wand-gui-backdrop { position:absolute; inset:0; background:#0b0d0abb; z-index:40; display:flex; align-items:center; justify-content:center; padding:16px }
+.wand-gui { width:min(420px,92%); max-height:88%; overflow:auto; background:#1a1526; border:2px solid #6a58a0; box-shadow:8px 8px 0 #0b0910a6; padding:14px 16px; color:#eadfff }
+.wand-gui-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+.wand-gui-title { display:flex; align-items:center; gap:8px; font:700 15px "Pixelify Sans"; color:#eadfff }
+
+/* Small per-item icon shared by the horizontal materials bar and the full
+   inventory grid — a cropped cell from sheet_resource_nodes.png for the
+   materials that have real sprite art, or a stable hashed-color swatch
+   (see hashColor() in Hud.jsx) for anything else so every item always
+   shows *something* distinct rather than plain text. */
+.material-icon { flex:0 0 auto; width:16px; height:16px; image-rendering:pixelated; background-repeat:no-repeat }
+/* Procedural icons (materialIcons.js) are cached full-square data-URL
+   drawings — stretch to fill the slot, no sprite-sheet offset math needed. */
+.material-icon.procedural { background-size:100% 100%; border-radius:3px }
+
+/* CSS-only tooltip for materials-bar chips and inventory slots — same
+   flat dark-panel look as the rest of the HUD, shown via a `data-tooltip`
+   attribute rather than the plain browser `title` popup. */
+[data-tooltip] { position:relative }
+[data-tooltip]:hover::after {
+  content:attr(data-tooltip); position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+  margin-bottom:6px; background:#1c1712f2; color:#e9dfba; border:1px solid #6d5a34;
+  padding:4px 8px; font:600 10px "Pixelify Sans"; white-space:nowrap; z-index:40; pointer-events:none;
+}
+
+.hud-hotbar { position:relative; display:flex; gap:4px; padding:8px; background:#1c1712d9; overflow-x:auto }
+.hud-slot { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:3px; border:1px solid #5c4d30; background:#241d15; color:#e9dfba; padding:5px 9px; cursor:pointer; min-width:64px }
+.hud-slot.active { border-color:#e9c14a; background:#33291a; box-shadow:0 0 0 1px #e9c14a inset }
+.hud-slot-key { font:600 10px "Pixelify Sans"; color:#8f8567 }
+.hud-slot-role { width:20px; height:20px; display:grid; place-items:center; background:#486b43; color:#fff7d6; font:600 9px "Pixelify Sans" }
+.hud-slot-role.root { background:#8a5937 }.hud-slot-role.vine { background:#557c32 }.hud-slot-role.fungus { background:#6c506f }.hud-slot-role.pod { background:#a3663e }
+.hud-slot-name { font-size:9px; text-align:center; line-height:1.2 }
+/* Active-cast affordances on each hotbar slot: an "F" badge marks a castable
+   spell, a mastery pip shows its level, and a cooldown badge greys the slot
+   while it recharges. */
+.hud-slot { position:relative }
+.hud-slot-cast { position:absolute; top:2px; right:3px; width:13px; height:13px; display:grid; place-items:center; background:#e9c14a; color:#241a0d; font:600 8px "Pixelify Sans" }
+.hud-slot-mastery { position:absolute; top:2px; left:3px; background:#33291a; color:#c8e06a; font:600 8px "Pixelify Sans"; padding:0 3px; border:1px solid #6d5a34 }
+.hud-slot-cd { position:absolute; bottom:2px; right:3px; background:#3a2a1a; color:#d98a54; font:600 8px "Pixelify Sans"; padding:0 3px }
+.hud-slot.cooling { opacity:.55 }
+.hud-slot.cooling .hud-slot-cast { background:#6d5a34; color:#b3a578 }
+
+/* The cast affordance line — sits just above the click prompt, a separate,
+   spellcasting-specific hint so it never fights the tile-click prompt. */
+.hud-cast-prompt { position:absolute; left:50%; bottom:100%; margin-bottom:32px; transform:translateX(-50%); background:#6c506fe6; color:#f7efd8; font:600 12px "Pixelify Sans"; padding:6px 13px; white-space:nowrap; z-index:5; pointer-events:none }
+
+.hud-help { position:absolute; left:0; right:0; top:100%; margin-top:6px; text-align:center; font-size:11px; color:#7a715a }
+
+/* Spellbook — a deliberate menu (unlike the in-world ritual panel), so it
+   gets a full backdrop; click outside or press B/Esc to close. */
+.spellbook-overlay { position:absolute; inset:0; background:#0b0d0aee; z-index:30; display:flex; align-items:center; justify-content:center; padding:20px }
+.spellbook-panel { width:min(560px,94vw); max-height:86%; overflow:auto; background:#1c1712; border:2px solid #6d5a34; box-shadow:8px 8px 0 #0b130da6; padding:16px 18px; color:#e9dfba }
+.spellbook-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px }
+.spellbook-title h3 { font:600 16px "Pixelify Sans"; color:#f7efd8; margin:0 }
+.spellbook-close { border:none; background:none; color:#8f8567; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.06em; cursor:pointer }
+.spellbook-close:hover { color:#e9dfba }
+.spellbook-rung { margin-bottom:12px }
+.spellbook-rung-label { display:block; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.08em; color:#b3a578; margin-bottom:6px }
+.spellbook-entry { display:flex; align-items:center; gap:8px; padding:5px 8px; border-left:2px solid #4a6b3f; margin-bottom:4px; font-size:12px }
+.spellbook-entry.unknown { color:#7a715a; border-left-color:#3a3225 }
+.spellbook-entry b { color:#e9c14a; min-width:110px; font:600 12px "Pixelify Sans" }
+.spellbook-entry.unknown b { color:#7a715a }
+.spellbook-mark { flex:0 0 auto; width:18px; height:18px; display:grid; place-items:center; background:#486b43; color:#fff7d6; font:600 9px "Pixelify Sans" }
+.spellbook-mark.root { background:#8a5937 } .spellbook-mark.vine { background:#557c32 } .spellbook-mark.fungus { background:#6c506f } .spellbook-mark.pod { background:#a3663e }
+.spellbook-entry.unknown .spellbook-mark { background:#2b241a; color:#7a715a }
+/* Spellbook entry becomes a wrapping row so the mastery/cast meta line sits
+   under the name+description without overflowing the panel. */
+.spellbook-entry { flex-wrap:wrap }
+.spellbook-desc { flex:1 1 200px }
+.spellbook-clue { flex:1 1 200px; font-style:italic }
+.spellbook-meta { flex:1 1 100%; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:26px; font-size:10px; color:#b3a578 }
+.spellbook-lv { flex:0 0 auto; background:#33291a; color:#e9c14a; border:1px solid #6d5a34; padding:1px 6px; font:600 10px "Pixelify Sans" }
+.spellbook-lv.lv2 { color:#c8e06a } .spellbook-lv.lv3 { color:#7fd0e0 } .spellbook-lv.lv4 { color:#f0a0e0; border-color:#f0a0e0 }
+.spellbook-bar { flex:0 0 90px; height:6px; background:#2b241a; border:1px solid #4a3f28; overflow:hidden }
+.spellbook-bar-fill { display:block; height:100%; background:linear-gradient(90deg,#557c32,#c8e06a) }
+.spellbook-bar-label { flex:0 0 auto; color:#8f8567 }
+.spellbook-cast { flex:0 0 auto; color:#e9c14a }
+.spellbook-cast.passive { color:#7a715a }
+.spellbook-cd { flex:0 0 auto; color:#d98a54 }
+
+/* Full inventory screen — Minecraft-style grid of slots, opened with I.
+   Same overlay+backdrop pattern as the Spellbook. */
+.inventory-overlay { position:absolute; inset:0; background:#0b0d0aee; z-index:30; display:flex; align-items:center; justify-content:center; padding:20px }
+.inventory-panel { width:min(480px,94vw); max-height:86%; overflow:auto; background:#1c1712; border:2px solid #6d5a34; box-shadow:8px 8px 0 #0b130da6; padding:16px 18px; color:#e9dfba }
+.inventory-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px }
+.inventory-title h3 { font:600 16px "Pixelify Sans"; color:#f7efd8; margin:0 }
+.inventory-close { border:none; background:none; color:#8f8567; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.06em; cursor:pointer }
+.inventory-close:hover { color:#e9dfba }
+.inventory-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:6px }
+.inventory-slot { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; aspect-ratio:1; border:1px solid #5c4d30; background:#241d15; padding:6px 4px; text-align:center }
+.inventory-slot .material-icon { width:24px; height:24px }
+.inventory-slot-name { font-size:10px; line-height:1.2 }
+.inventory-slot-count { color:#e9c14a; font:600 12px "Pixelify Sans" }
+
+/* Discard/Equip/Unequip action button shown inside an inventory slot. */
+.inventory-action { border:1px solid #5c4d30; background:#33291a; color:#e9dfba; font:600 9px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.04em; padding:2px 6px; cursor:pointer }
+.inventory-action:hover { border-color:#e9c14a; color:#f7efd8 }
+
+/* Minecraft-style slot grid — fixed square cells, pick-up-to-cursor / drop /
+   trashcan. Empty slots are recessed; filled slots pop; the grabbed slot dims
+   as its contents ride the cursor (.mc-held). */
+.mc-inv-grid { display:grid; gap:5px; margin-bottom:10px }
+.mc-slot { position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center; border:2px solid #4b3f26; background:#171209; box-shadow:inset 2px 2px 0 #0d0a06, inset -2px -2px 0 #2a2214; cursor:pointer; padding:0 }
+.mc-slot.filled { background:#241d15; cursor:grab }
+.mc-slot.filled:hover { border-color:#e9c14a }
+.mc-slot.held { opacity:.35 }
+.mc-slot .material-icon { width:26px; height:26px }
+.mc-slot-count { position:absolute; right:2px; bottom:1px; color:#f7efd8; font:600 12px "Pixelify Sans"; text-shadow:1px 1px 0 #000 }
+
+.mc-inv-footer { display:flex; align-items:center; gap:10px; margin-bottom:6px }
+.mc-trash { display:inline-flex; align-items:center; gap:5px; border:2px solid #5c4d30; background:#241d15; color:#e9dfba; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; cursor:pointer }
+.mc-trash svg { width:16px; height:16px }
+.mc-trash.armed { border-color:#d1543a; color:#ffb9a6; background:#2e1913; animation:mc-trash-pulse 1s ease-in-out infinite }
+.mc-trash.armed:hover { background:#4a1f16; border-color:#ff6b4a }
+@keyframes mc-trash-pulse { 0%,100% { box-shadow:0 0 0 0 #d1543a55 } 50% { box-shadow:0 0 0 4px #d1543a00 } }
+.mc-inv-hint { font-size:10px; color:#9c8f6a; line-height:1.3 }
+
+/* The stack that rides the cursor while held — floats above everything and
+   never intercepts clicks. */
+.mc-held { position:fixed; z-index:40; transform:translate(-50%,-50%); pointer-events:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center; background:#241d15dd; border:2px solid #e9c14a; box-shadow:3px 3px 0 #0b130da6 }
+.mc-held .material-icon { width:26px; height:26px }
+
+/* Inventory Items/Crafting tab switch. */
+.inv-tabs { display:flex; gap:4px; margin-bottom:10px }
+.inv-tab { flex:1; border:2px solid #4b3f26; background:#171209; color:#b7a878; font:600 12px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; padding:6px 0; cursor:pointer }
+.inv-tab:hover { color:#e9dfba }
+.inv-tab.active { background:#2b2416; border-color:#e9c14a; color:#f7efd8 }
+
+/* Energy pills — shared by the HUD wand-row strip and the Crafting tab. Dim
+   when empty; tinted to the element when the player holds some. */
+.hud-energy-pill { display:inline-flex; align-items:center; gap:4px; border:1px solid #43381f; background:#1b160d; color:#6f6446; font:600 10px "Pixelify Sans"; padding:2px 7px; border-radius:9px; white-space:nowrap }
+.hud-energy-pill.has { background:#241d1200 }
+
+/* HUD wand row above the materials bar — the siphon button + a live energy strip. */
+.hud-wand-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px }
+.hud-wand-btn { display:inline-flex; align-items:center; gap:5px; border:2px solid #6d5a34; background:#241d15; color:#e9dfba; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.04em; padding:5px 10px; cursor:pointer }
+.hud-wand-btn:hover { border-color:#bcd0ff; color:#eef4ff; box-shadow:0 0 8px #bcd0ff44 }
+.hud-wand-icon { color:#bcd0ff; font-size:13px }
+.hud-energy-strip { display:flex; gap:4px; flex-wrap:wrap }
+
+/* Crafting tab. */
+.craft-energy { margin-bottom:6px }
+.craft-energy-row { display:flex; gap:4px; flex-wrap:wrap; margin:4px 0 6px }
+.craft-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:6px }
+.craft-card { display:flex; flex-direction:column; gap:5px; border:2px solid #4b3f26; background:#1c160e; padding:8px }
+.craft-card.ready { border-color:#7fae57 }
+.craft-card-head { display:flex; align-items:center; gap:6px }
+.craft-card-head .material-icon { width:22px; height:22px }
+.craft-card-head b { font:600 12px "Pixelify Sans"; color:#f7efd8 }
+.craft-card-cost { font-size:10px; color:#9c8f6a; line-height:1.3 }
+.craft-btn { border:1px solid #5c4d30; background:#33291a; color:#e9dfba; font:600 11px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.04em; padding:5px 0; cursor:pointer }
+.craft-btn:hover:not(:disabled) { border-color:#8fd46a; background:#2c3a20; color:#eaffd8 }
+.craft-btn:disabled { opacity:.4; cursor:not-allowed }
+
+/* Spells palette (Inventory > Spells tab) — chips you pick up and drop into the
+   hotbar row below. Chips already on the bar are marked. */
+.spell-palette { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:5px; margin-bottom:10px }
+.spell-chip { position:relative; display:flex; align-items:center; gap:5px; border:2px solid #4b3f26; background:#1c160e; color:#e9dfba; font:600 11px "Pixelify Sans"; padding:6px 8px; cursor:grab; text-align:left }
+.spell-chip:hover { border-color:#e9c14a }
+.spell-chip.assigned { background:#241d15; border-color:#5c6d3a }
+.spell-chip.held { opacity:.35 }
+.spell-chip-name { flex:1; line-height:1.15 }
+.spell-chip-on { font-size:8px; color:#9db86a; text-transform:uppercase; letter-spacing:.04em }
+
+/* Minecraft-style hotbar row at the bottom of the Inventory — same six columns
+   as the material grid, set off by a top border like MC's hotbar gap. */
+.inv-hotbar-label { margin-top:6px; font:600 10px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; color:#9c8f6a }
+.inv-hotbar-row { display:grid; gap:5px; margin-top:5px; padding-top:10px; border-top:2px solid #4b3f26 }
+.hotbar-slot { flex-direction:column; gap:2px; aspect-ratio:auto; min-height:48px; padding:4px 2px }
+.hotbar-slot .mc-slot-key { position:absolute; top:1px; left:3px; font:600 10px "Pixelify Sans"; color:#a9986a }
+.hotbar-slot.active { border-color:#e9c14a; box-shadow:0 0 0 1px #e9c14a inset }
+.hotbar-slot.filled { cursor:grab }
+.hotbar-slot .hud-slot-role { font-size:9px; padding:0 3px }
+.hotbar-slot-name { font:600 9px "Pixelify Sans"; color:#e9dfba; line-height:1.05; text-align:center }
+/* The item hotbar row (materials) highlights the currently-selected seed in
+   green rather than the amber used for the active wand slot. */
+.hotbar-slot.item.active { border-color:#8fd06a; box-shadow:0 0 0 1px #8fd06a inset }
+.hotbar-slot.item .mc-slot-count { position:static; margin-top:1px; font-size:10px; color:#e9c14a }
+.hotbar-slot.item .mc-slot-count.out { color:#c06a5a }
+
+/* Empty on-screen HUD hotbar slot. */
+.hud-slot.empty { opacity:.5; border-style:dashed }
+
+/* Cursor ghost when a spell (not a material) is held. */
+.mc-held.spell { width:auto; min-width:60px; padding:3px 7px; gap:4px; border-color:#bca6ff }
+.mc-held.spell .hotbar-slot-name { color:#f7efd8 }
+
+/* Single-slot Artifact section (Phase 3) — reuses the inventory-slot grid
+   but distinguishes the equipped artifact with a gold highlight. */
+.inventory-slot.artifact { background:#2b241a }
+.inventory-slot.artifact.equipped { border-color:#e9c14a; box-shadow:0 0 0 1px #e9c14a inset }
+
+/* Always-on corner minimap — sits in the top-right of the play frame, below
+   the top HUD bar and opposite the log panel. pointer-events:none so it never
+   blocks a world click landing on the canvas beneath it. */
+.minimap { position:absolute; top:40px; right:8px; z-index:6; display:flex; flex-direction:column; gap:2px; padding:4px; background:#1c1712e6; border:1px solid #6d5a34; box-shadow:3px 3px 0 #0b130d80; cursor:pointer; font-family:inherit }
+.minimap:hover { border-color:#e9c14a }
+.minimap-title { font:600 10px "Pixelify Sans"; color:#f7efd8; text-align:center; letter-spacing:.03em }
+.minimap-canvas { display:block; image-rendering:pixelated; border:1px solid #4a3f2a; background:#171310; pointer-events:none }
+.minimap-hint { font:600 8px "Pixelify Sans"; color:#8f8567; text-align:center; text-transform:uppercase; letter-spacing:.06em }
+.minimap:hover .minimap-hint { color:#e9c14a }
+
+/* World map overlay (M) — schematic minimaps of all four zones laid out to
+   match their in-world geography (Wildwood W · Farm hub · Mine E · Town S).
+   Wider than the other menu panels to fit the four zone cards side by side. */
+.map-overlay { position:absolute; inset:0; background:#0b0d0aee; z-index:30; display:flex; align-items:center; justify-content:center; padding:20px }
+.map-panel { width:min(760px,96vw); max-height:90%; overflow:auto; background:#1c1712; border:2px solid #6d5a34; box-shadow:8px 8px 0 #0b130da6; padding:16px 18px; color:#e9dfba }
+.map-grid { display:grid; grid-template-columns:repeat(3, auto); grid-template-rows:auto auto; gap:16px 20px; justify-content:center; justify-items:center; align-items:start; padding:6px 0 10px }
+.map-zone { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px; border:1px solid #3a3121; background:#241d15 }
+.map-zone.current { border-color:#e9c14a; box-shadow:0 0 0 1px #e9c14a inset }
+.map-zone-head { display:flex; align-items:center; gap:8px }
+.map-zone-name { font:600 12px "Pixelify Sans"; color:#f7efd8 }
+.map-here { font:600 9px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; color:#241a0d; background:#e9c14a; padding:2px 6px }
+.map-locked { font:600 9px "Pixelify Sans"; text-transform:uppercase; letter-spacing:.05em; color:#e9dfba; background:#5a3a3a; padding:2px 6px }
+.map-canvas { display:block; image-rendering:pixelated; border:1px solid #4a3f2a; background:#171310 }
+.map-zone-note { font-size:10px; color:#9a8f74; text-align:center }
+.map-legend { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; padding:8px 0 2px; font-size:11px; color:#b7ac8e }
+.map-legend span { display:flex; align-items:center; gap:5px }
+.map-key { width:11px; height:11px; display:inline-block; border:1px solid #00000055 }
+
+/* Town shop listing — an inventory-slot rendered as a real <button> so the
+   whole tile is clickable; strip default button chrome and add a disabled
+   (can't-afford) state. */
+button.inventory-slot.shop-buy { font-family:inherit; cursor:pointer }
+button.inventory-slot.shop-buy:hover:not(:disabled) { border-color:#e9c14a; background:#33291a }
+button.inventory-slot.shop-buy:disabled { opacity:.45; cursor:not-allowed }
+
+/* Farm upgrades list in the shop overlay — full-width rows, distinct from the
+   material-buy grid above them. */
+.shop-upgrades { display:flex; flex-direction:column; gap:6px }
+.shop-upgrade { display:grid; grid-template-columns:1fr auto; gap:2px 10px; align-items:center; text-align:left; border:1px solid #5c4d30; background:#241d15; color:#e9dfba; padding:8px 10px; cursor:pointer; font-family:inherit }
+.shop-upgrade:hover:not(:disabled) { border-color:#e9c14a; background:#33291a }
+.shop-upgrade:disabled { opacity:.45; cursor:not-allowed }
+.shop-upgrade-name { font:600 12px "Pixelify Sans"; color:#f7efd8 }
+.shop-upgrade-name small { color:#8f8567; font-weight:400 }
+.shop-upgrade-desc { grid-column:1; font-size:10px; color:#b3a578 }
+.shop-upgrade-price { grid-column:2; grid-row:1 / span 2; color:#e9c14a; font:600 13px "Pixelify Sans"; align-self:center }
+
+/* Town notice board (quest) cards — reuses the Shop overlay/panel base, so
+   only the per-request card styling is defined here. */
+.quest-list { display:flex; flex-direction:column; gap:8px }
+.quest-card { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #5c4d30; background:#241d15; padding:8px 12px }
+.quest-card.done { border-color:#7bbf6a; background:#20301c }
+.quest-card-body { display:flex; flex-direction:column; gap:2px }
+.quest-card-title { font:600 13px "Pixelify Sans"; color:#f7efd8 }
+.quest-card-progress { font-size:11px; color:#b3a578 }
+.quest-card-reward { font-size:11px; color:#e9c14a }
+.quest-claim { border:1px solid #5c4d30; background:#33291a; color:#e9dfba; padding:7px 14px; font:600 12px "Pixelify Sans"; cursor:pointer }
+.quest-claim:hover:not(:disabled) { border-color:#7bbf6a; background:#2c4023 }
+.quest-claim:disabled { opacity:.45; cursor:not-allowed }
+
+/* Shop premium (rung-5) reputation-lock note. */
+.shop-locked-note { display:block; margin-top:8px; font-size:11px; line-height:1.5; color:#c48fd9; border-left:2px solid #5a2e6e; padding-left:8px }
+
+/* One-time completion celebration — same overlay/panel base as Spellbook/
+   Inventory, with a gold-toned accent border to make it feel like a win. */
+.completion-panel { border-color:#e9c14a; text-align:center; max-width:420px }
+.completion-panel h3 { font:600 18px "Pixelify Sans"; color:#e9c14a; margin:0 0 10px }
+.completion-panel p { font-size:12px; line-height:1.5; color:#e9dfba; margin:0 0 14px }
+
+@media (max-width:760px) {
+  .spellbook-panel { padding:12px 14px }
+  .inventory-panel { padding:12px 14px }
+}
+
+/* ============================================================
+   Phase 4 — Play-screen polish: motion, press/focus feedback,
+   overlay entrance animations. Additive layer over the rules
+   above; keeps the flat pixel aesthetic (no blur/backdrop-filter).
+   All motion is wrapped in prefers-reduced-motion at the bottom.
+   ============================================================ */
+
+/* Snappy, consistent transitions on every interactive control. Short
+   durations + ease-out keep the pixel-UI feeling crisp, not floaty. */
+.hud-icon-btn,
+.hud-advance,
+.hud-inv-chip,
+.hud-slot,
+.inventory-action,
+.shop-upgrade,
+button.inventory-slot.shop-buy,
+.quest-claim,
+.spellbook-close,
+.inventory-close,
+.minimap,
+.map-zone {
+  transition: background-color .12s ease-out, border-color .12s ease-out,
+              box-shadow .12s ease-out, color .12s ease-out, transform .08s ease-out;
+}
+
+/* Press feedback — a tiny nudge so clicks feel physical. */
+.hud-icon-btn:active,
+.hud-advance:active,
+.hud-inv-chip:active,
+.inventory-action:active,
+.shop-upgrade:active:not(:disabled),
+button.inventory-slot.shop-buy:active:not(:disabled),
+.quest-claim:active:not(:disabled) { transform: translateY(1px); }
+
+.hud-slot:active { transform: translateY(1px); }
+
+/* Keyboard focus ring consistent with the game's gold accent. Only shows
+   for keyboard nav (:focus-visible), never on mouse press. */
+.hud-icon-btn:focus-visible,
+.hud-advance:focus-visible,
+.hud-inv-chip:focus-visible,
+.hud-slot:focus-visible,
+.inventory-action:focus-visible,
+.shop-upgrade:focus-visible,
+button.inventory-slot.shop-buy:focus-visible,
+.quest-claim:focus-visible,
+.spellbook-close:focus-visible,
+.inventory-close:focus-visible,
+.minimap:focus-visible {
+  outline: 2px solid #e9c14a; outline-offset: 2px;
+}
+
+/* Active hotbar slot gets a soft breathing glow so the equipped spell
+   reads at a glance even in a busy scene. */
+@keyframes hotbar-glow {
+  0%,100% { box-shadow: 0 0 0 1px #e9c14a inset, 0 0 6px #e9c14a55; }
+  50%     { box-shadow: 0 0 0 1px #e9c14a inset, 0 0 12px #e9c14a99; }
+}
+.hud-slot.active { animation: hotbar-glow 1.8s ease-in-out infinite; }
+
+/* Cooling slots pulse their cooldown badge so the recharge is legible. */
+@keyframes cd-pulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+.hud-slot.cooling .hud-slot-cd { animation: cd-pulse 1s ease-in-out infinite; }
+
+/* Overlay entrance — backdrop fades, panel fades + scales up slightly.
+   Applied to all four menu surfaces (Spellbook / Inventory / Map, plus
+   Shop & Quest which reuse the inventory overlay base). */
+@keyframes backdrop-in { from { opacity:0 } to { opacity:1 } }
+@keyframes panel-in {
+  from { opacity:0; transform: translateY(8px) scale(.97); }
+  to   { opacity:1; transform: translateY(0)   scale(1); }
+}
+.spellbook-overlay,
+.inventory-overlay,
+.map-overlay { animation: backdrop-in .14s ease-out; }
+.spellbook-panel,
+.inventory-panel,
+.map-panel { animation: panel-in .18s cubic-bezier(.2,.8,.3,1); }
+
+/* Stamina fill already transitions width; give it a color transition too
+   so low-stamina warning shifts read smoothly. */
+.hud-stamina-fill { transition: width .2s ease-out, background .3s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-icon-btn, .hud-advance, .hud-inv-chip, .hud-slot, .inventory-action,
+  .shop-upgrade, button.inventory-slot.shop-buy, .quest-claim,
+  .spellbook-close, .inventory-close, .minimap, .map-zone,
+  .hud-stamina-fill { transition: none; }
+  .hud-slot.active, .hud-slot.cooling .hud-slot-cd,
+  .spellbook-overlay, .inventory-overlay, .map-overlay,
+  .spellbook-panel, .inventory-panel, .map-panel { animation: none; }
+  .hud-icon-btn:active, .hud-advance:active, .hud-inv-chip:active,
+  .inventory-action:active, .shop-upgrade:active, .quest-claim:active,
+  .hud-slot:active, button.inventory-slot.shop-buy:active { transform: none; }
+}
